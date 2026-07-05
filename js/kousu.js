@@ -1,8 +1,13 @@
 const Kousu = {
 
     editingIndex: -1,
+    selectedWorker: null,
 
     init() {
+        this.workerSelect = document.getElementById("kousuWorkerSelect");
+        this.workerList = document.getElementById("kousuWorkerList");
+        this.inputCard = document.getElementById("kousuInputCard");
+
         this.customer = document.getElementById("customerSelect");
         this.project = document.getElementById("projectSelect");
         this.content = document.getElementById("contentSelect");
@@ -15,8 +20,10 @@ const Kousu = {
 
         this.createSummary();
         this.createCancelButton();
+        this.createBackButton();
 
         this.loadCustomers();
+        this.renderWorkerList();
 
         this.customer.addEventListener("change", () => this.loadProjects());
         this.project.addEventListener("change", () => this.loadContents());
@@ -27,6 +34,83 @@ const Kousu = {
         });
 
         this.refreshTable();
+    },
+getWorkerId(worker) {
+    return worker.id || worker.workerId || worker;
+},
+
+getWorkerName(worker) {
+    return worker.name || worker.workerName || worker;
+},
+    renderWorkerList() {
+        if (!this.workerList) return;
+
+        this.workerList.innerHTML = "";
+
+        const workers = DB.getWorkers();
+        const todayData = TimeCard.data[TimeCard.date] || {};
+
+        workers.forEach(worker => {
+            const workerId = this.getWorkerId(worker);
+            const record = todayData[workerId];
+
+            if (!record || !record.clockIn) return;
+
+            const btn = document.createElement("button");
+            btn.className = "btn";
+            btn.style.margin = "8px";
+            btn.style.padding = "14px 22px";
+            btn.style.fontSize = "16px";
+
+            const workerName = this.getWorkerName(worker);
+            btn.textContent = `${workerName}　${record.status}`;
+            btn.onclick = () => this.selectWorker(worker);
+
+            this.workerList.appendChild(btn);
+        });
+
+        if (this.workerList.innerHTML === "") {
+            this.workerList.innerHTML = "<p>本日出勤した作業者はいません。</p>";
+        }
+    },
+
+    selectWorker(worker) {
+    this.selectedWorker = {
+        id: this.getWorkerId(worker),
+        name: this.getWorkerName(worker)
+    };
+
+    if (this.workerSelect) this.workerSelect.classList.add("hidden");
+    if (this.inputCard) this.inputCard.classList.remove("hidden");
+
+    const title = this.inputCard.querySelector("h2");
+    if (title) {
+        title.textContent = `工数入力：${this.selectedWorker.name}`;
+    }
+
+    this.refreshTable();
+},
+
+    createBackButton() {
+        if (document.getElementById("backWorkerSelect")) return;
+
+        const back = document.createElement("button");
+        back.id = "backWorkerSelect";
+        back.className = "btn secondary";
+        back.textContent = "作業者選択へ戻る";
+        back.style.marginLeft = "10px";
+
+        this.button.insertAdjacentElement("afterend", back);
+
+        back.addEventListener("click", () => {
+            this.selectedWorker = null;
+            this.cancelEdit();
+
+            if (this.inputCard) this.inputCard.classList.add("hidden");
+            if (this.workerSelect) this.workerSelect.classList.remove("hidden");
+
+            this.refreshTable();
+        });
     },
 
     createSummary() {
@@ -106,16 +190,18 @@ const Kousu = {
     },
 
     save() {
+        if (!this.selectedWorker) {
+            alert("作業者を選択してください");
+            return;
+        }
+
         if (!this.validateForm()) return;
 
         const hours = Number(this.hour.value);
         const available = this.getAvailableHours();
 
         if (this.editingIndex === -1 && hours > available) {
-            alert(
-                "工数入力が勤務時間を超えています。\n\n" +
-                "残り工数：" + available.toFixed(2) + " h"
-            );
+            alert("工数入力が勤務時間を超えています。\n\n残り工数：" + available.toFixed(2) + " h");
             this.hour.focus();
             return;
         }
@@ -125,10 +211,7 @@ const Kousu = {
             const oldHours = Number(old.hours || 0);
 
             if (hours > available + oldHours) {
-                alert(
-                    "工数入力が勤務時間を超えています。\n\n" +
-                    "残り工数：" + (available + oldHours).toFixed(2) + " h"
-                );
+                alert("工数入力が勤務時間を超えています。\n\n残り工数：" + (available + oldHours).toFixed(2) + " h");
                 this.hour.focus();
                 return;
             }
@@ -139,7 +222,8 @@ const Kousu = {
 
         const record = {
             date: this.getTodayDate(),
-            employee: "",
+            employeeId: this.selectedWorker.id,
+            employeeName: this.selectedWorker.name,
             customer: customer.name,
             project: project.name,
             content: this.content.value,
@@ -196,6 +280,11 @@ const Kousu = {
 
     edit(index) {
         const record = DB.getTodayKousu()[index];
+
+        this.selectedWorker = {
+            id: record.employeeId,
+            name: record.employeeName
+        };
 
         const customerObj = DB.getCustomers().find(c => c.name === record.customer);
         if (!customerObj) return;
@@ -257,10 +346,13 @@ const Kousu = {
         let total = 0;
 
         DB.getTodayKousu().forEach((r, index) => {
+            if (this.selectedWorker && r.employeeId !== this.selectedWorker.id) return;
+
             total += Number(r.hours || 0);
 
             this.table.innerHTML += `
                 <tr>
+                    <td>${r.employeeName || ""}</td>
                     <td>${r.customer}</td>
                     <td>${r.project}</td>
                     <td>${r.content}</td>
@@ -287,8 +379,8 @@ const Kousu = {
     updateSummary(inputTotal) {
         let workHours = 0;
 
-        if (typeof TimeCard !== "undefined" && TimeCard.getWorkHours) {
-            workHours = TimeCard.getWorkHours();
+        if (this.selectedWorker) {
+            workHours = this.getWorkerWorkHours(this.selectedWorker.id);
         }
 
         const remain = workHours - inputTotal;
@@ -313,19 +405,80 @@ const Kousu = {
     },
 
     getAvailableHours() {
-        let workHours = 0;
+        if (!this.selectedWorker) return 0;
 
-        if (typeof TimeCard !== "undefined" && TimeCard.getWorkHours) {
-            workHours = TimeCard.getWorkHours();
-        }
+        const workHours = this.getWorkerWorkHours(this.selectedWorker.id);
 
         let inputTotal = 0;
 
         DB.getTodayKousu().forEach(r => {
-            inputTotal += Number(r.hours || 0);
+            if (r.employeeId === this.selectedWorker.id) {
+                inputTotal += Number(r.hours || 0);
+            }
         });
 
         return Math.max(workHours - inputTotal, 0);
+    },
+
+    getWorkerWorkHours(workerId) {
+        const todayData = TimeCard.data[TimeCard.date] || {};
+        const record = todayData[workerId];
+
+        if (!record || !record.clockIn) return 0;
+
+        const endTime = record.clockOut || this.nowTime();
+
+        return this.calculateWorkHours(record.clockIn, endTime);
+    },
+
+    calculateWorkHours(start, end) {
+        const startMin = this.timeToMinutes(start);
+        const endMin = this.timeToMinutes(end);
+
+        if (endMin <= startMin) return 0;
+
+        let totalMinutes = endMin - startMin;
+
+        const breaks = [
+            ["10:00", "10:10"],
+            ["12:00", "12:45"],
+            ["15:00", "15:10"],
+            ["17:20", "17:30"]
+        ];
+
+        breaks.forEach(b => {
+            totalMinutes -= this.getOverlapMinutes(start, end, b[0], b[1]);
+        });
+
+        if (totalMinutes < 0) totalMinutes = 0;
+
+        return Math.round((totalMinutes / 60) * 100) / 100;
+    },
+
+    getOverlapMinutes(start, end, breakStart, breakEnd) {
+        const s = this.timeToMinutes(start);
+        const e = this.timeToMinutes(end);
+        const bs = this.timeToMinutes(breakStart);
+        const be = this.timeToMinutes(breakEnd);
+
+        const overlapStart = Math.max(s, bs);
+        const overlapEnd = Math.min(e, be);
+
+        return Math.max(overlapEnd - overlapStart, 0);
+    },
+
+    timeToMinutes(time) {
+        if (!time) return 0;
+
+        const parts = time.split(":");
+        return Number(parts[0]) * 60 + Number(parts[1]);
+    },
+
+    nowTime() {
+        const d = new Date();
+        const h = String(d.getHours()).padStart(2, "0");
+        const m = String(d.getMinutes()).padStart(2, "0");
+        return `${h}:${m}`;
     },
 
     setText(id, text) {
@@ -342,3 +495,7 @@ const Kousu = {
     }
 
 };
+
+document.addEventListener("DOMContentLoaded", () => {
+    Kousu.init();
+});

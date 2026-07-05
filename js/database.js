@@ -1,4 +1,4 @@
-const DB = {
+window.DB = {
 
     STORAGE_KEY: "FUKUHARA_DB_V21",
     OLD_STORAGE_KEY: "FUKUHARA_DB",
@@ -10,6 +10,17 @@ const DB = {
 
         if (json) {
             this.data = JSON.parse(json);
+
+            if (!this.data.workers || this.data.workers.length === 0) {
+                this.data.workers = this.getDefaultWorkers();
+                this.save();
+            }
+
+            if (!this.data.todayKousu) {
+                this.data.todayKousu = [];
+                this.save();
+            }
+
         } else {
             this.createSampleData();
             this.save();
@@ -21,6 +32,46 @@ const DB = {
             this.STORAGE_KEY,
             JSON.stringify(this.data)
         );
+    },
+
+    getDefaultWorkers() {
+        return [
+            {
+                id: "w001",
+                name: "普久原ルベン",
+                role: "admin",
+                password: "0001",
+                active: true
+            },
+            {
+                id: "w002",
+                name: "普久原フレディー",
+                role: "worker",
+                password: "0002",
+                active: true
+            },
+            {
+                id: "w003",
+                name: "平識デュリ",
+                role: "worker",
+                password: "0003",
+                active: true
+            },
+            {
+                id: "w004",
+                name: "フィン ダイ ロン",
+                role: "worker",
+                password: "0004",
+                active: true
+            },
+            {
+                id: "w005",
+                name: "トゥ ミン フオン",
+                role: "worker",
+                password: "0005",
+                active: true
+            }
+        ];
     },
 
     createSampleData() {
@@ -58,16 +109,18 @@ const DB = {
                 }
             ],
 
-            workers: [
-                "普久原ルベン",
-                "普久原フレディー",
-                "平識デュリ",
-                "フィン ダイ ロン",
-                "トゥ ミン フオン"
-            ],
+            workers: this.getDefaultWorkers(),
 
             todayKousu: []
         };
+    },
+
+    getWorkers() {
+        return this.data.workers || [];
+    },
+
+    getWorker(id) {
+        return this.getWorkers().find(w => w.id == id);
     },
 
     /* =========================
@@ -239,11 +292,5 @@ const DB = {
     }
 
 };
-
-DB.init();
-
-/* =======================================
-   Inicializar automáticamente
-======================================= */
 
 DB.init();

@@ -8,11 +8,11 @@
     <link rel="stylesheet" href="css/style.css">
 
     <script src="js/database.js"></script>
-    <script src="js/anken.js"></script>
-    <script src="js/kousu.js"></script>
-    <script src="js/timecard.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/app.js"></script>
+<script src="js/anken.js"></script>
+<script src="js/timecard.js"></script>
+<script src="js/kousu.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/app.js"></script>
 </head>
 
 <body>
@@ -77,48 +77,31 @@
 
             <div id="timecard" class="screen hidden">
 
-                <div class="timecard-panel">
+    <div class="timecard-panel">
 
-                    <div class="timecard-header">
-                        <div>
-                            <h2>タイムカード</h2>
-                            <p>本日の勤務状況</p>
-                        </div>
-                        <strong id="timecardStatus">未出勤</strong>
-                    </div>
-
-                    <div class="timecard-grid">
-
-                        <div class="timecard-item">
-                            <span>出勤時刻</span>
-                            <strong id="clockInTime">--:--</strong>
-                        </div>
-
-                        <div class="timecard-item">
-                            <span>退勤時刻</span>
-                            <strong id="clockOutTime">--:--</strong>
-                        </div>
-
-                        <div class="timecard-item">
-                            <span>勤務時間</span>
-                            <strong id="timecardWorkHours">0.00 h</strong>
-                        </div>
-
-                    </div>
-
-                    <div class="timecard-actions">
-                        <button class="btn" id="clockInBtn">出勤</button>
-                        <button class="btn" id="clockOutBtn">退勤</button>
-                        <button class="btn danger" id="resetTimecardBtn">今日をリセット</button>
-                    </div>
-
-                </div>
-
+        <div class="timecard-header">
+            <div>
+                <h2>タイムカード</h2>
+                <p>作業者を選択して打刻してください</p>
             </div>
+        </div>
 
-            <div id="kousu" class="screen hidden">
+        <div id="timecardWorkerList"></div>
 
-                <div class="card">
+    </div>
+
+</div>
+
+           <div id="kousu" class="screen hidden">
+
+    <div id="kousuWorkerSelect" class="card">
+        <h2>本日の作業者</h2>
+        <p>工数入力する作業者を選択してください</p>
+
+        <div id="kousuWorkerList"></div>
+    </div>
+
+    <div class="card hidden" id="kousuInputCard">
 
                     <h2>工数入力</h2>
 
@@ -153,12 +136,13 @@
                     <table>
                         <thead>
                             <tr>
+                                <th>作業者</th>
                                 <th>客先</th>
                                 <th>件名</th>
                                 <th>内容</th>
                                 <th>工数</th>
                                 <th>操作</th>
-                            </tr>
+                           </tr>
                         </thead>
 
                         <tbody id="todayTable"></tbody>

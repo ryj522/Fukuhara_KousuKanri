@@ -7,24 +7,10 @@ const TimeCard = {
         this.date = this.today();
         this.load();
 
-        this.inBtn = document.getElementById("clockInBtn");
-        this.outBtn = document.getElementById("clockOutBtn");
-        this.resetBtn = document.getElementById("resetTimecardBtn");
-
+        this.workerList = document.getElementById("timecardWorkerList");
         this.status = document.getElementById("timecardStatus");
-        this.inTime = document.getElementById("clockInTime");
-        this.outTime = document.getElementById("clockOutTime");
-        this.workHours = document.getElementById("timecardWorkHours");
 
-        if (this.inBtn) this.inBtn.addEventListener("click", () => this.clockIn());
-        if (this.outBtn) this.outBtn.addEventListener("click", () => this.clockOut());
-        if (this.resetBtn) this.resetBtn.addEventListener("click", () => this.resetToday());
-
-        this.updateView();
-
-        setInterval(() => {
-            this.updateView();
-        }, 60000);
+        this.renderWorkers();
     },
 
     today() {
@@ -47,169 +33,195 @@ const TimeCard = {
         this.data = saved ? JSON.parse(saved) : {};
 
         if (!this.data[this.date]) {
-            this.createToday();
+            this.data[this.date] = {};
+            this.save();
         }
-    },
-
-    createToday() {
-        this.data[this.date] = {
-            date: this.date,
-            clockIn: "",
-            clockOut: "",
-            workHours: 0,
-            overtimeHours: 0,
-            status: "未出勤"
-        };
-
-        this.save();
     },
 
     save() {
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.data));
     },
 
-    getToday() {
-        return this.data[this.date];
+    getWorkerToday(workerId) {
+        if (!this.data[this.date][workerId]) {
+            this.data[this.date][workerId] = {
+                clockIn: "",
+                clockOut: "",
+                status: "未出勤"
+            };
+            this.save();
+        }
+
+        return this.data[this.date][workerId];
     },
 
-    clockIn() {
-        const today = this.getToday();
+    getWorkers() {
+        if (typeof DB !== "undefined" && DB.getWorkers) {
+            return DB.getWorkers();
+        }
+        return [];
+    },
 
-        if (today.clockIn) {
+    getWorkerId(worker) {
+        return worker.id || worker.workerId || worker;
+    },
+
+    getWorkerName(worker) {
+        return worker.name || worker.workerName || worker;
+    },
+
+    renderWorkers() {
+        if (!this.workerList) return;
+
+        const workers = this.getWorkers();
+        this.workerList.innerHTML = "";
+
+        workers.forEach(worker => {
+            const workerId = this.getWorkerId(worker);
+            const workerName = this.getWorkerName(worker);
+            const record = this.getWorkerToday(workerId);
+
+            const isNotStarted = !record.clockIn && !record.clockOut;
+            const isWorking = !!record.clockIn && !record.clockOut;
+            const isFinished = !!record.clockIn && !!record.clockOut;
+
+            const card = document.createElement("div");
+            card.className = `worker-timecard-card ${isWorking ? "tc-card-working" : ""}`;
+
+            card.innerHTML = `
+                <div class="worker-name">${workerName}</div>
+
+                <div class="worker-status ${this.getStatusClass(record.status)}">
+                    状態：${record.status}
+                </div>
+
+                <div class="worker-times">
+                    <label>出勤</label>
+                    <input type="time" value="${record.clockIn || ""}"
+                        onchange="TimeCard.manualChange('${workerId}', 'clockIn', this.value)">
+
+                    <label>退勤</label>
+                    <input type="time" value="${record.clockOut || ""}"
+                        onchange="TimeCard.manualChange('${workerId}', 'clockOut', this.value)">
+                </div>
+
+                <div class="worker-buttons">
+                    <button class="tc-btn tc-clockin ${isNotStarted ? "is-green" : "is-gray"}"
+                        onclick="TimeCard.clockIn('${workerId}')">
+                        出勤
+                    </button>
+
+                    <button class="tc-btn tc-clockout ${isWorking ? "is-red" : "is-gray"}"
+                        onclick="TimeCard.clockOut('${workerId}')">
+                        退勤
+                    </button>
+
+                    <button class="tc-btn tc-reset ${isNotStarted ? "is-gray" : "is-yellow"}"
+                        onclick="TimeCard.resetWorker('${workerId}')">
+                        リセット
+                    </button>
+                </div>
+            `;
+
+            this.workerList.appendChild(card);
+        });
+    },
+
+    getStatusClass(status) {
+        if (status === "勤務中") return "status-working";
+        if (status === "退勤済み") return "status-finished";
+        return "status-not-started";
+    },
+
+    refreshLinkedViews() {
+        if (typeof Kousu !== "undefined") {
+            if (Kousu.renderWorkerList) Kousu.renderWorkerList();
+            if (Kousu.refreshTable) Kousu.refreshTable();
+        }
+
+        if (typeof Dashboard !== "undefined" && Dashboard.update) {
+            Dashboard.update();
+        }
+    },
+
+    manualChange(workerId, field, value) {
+        const record = this.getWorkerToday(workerId);
+
+        record[field] = value;
+
+        if (record.clockIn && record.clockOut) {
+            record.status = "退勤済み";
+        } else if (record.clockIn) {
+            record.status = "勤務中";
+        } else {
+            record.status = "未出勤";
+        }
+
+        this.save();
+        this.renderWorkers();
+        this.refreshLinkedViews();
+    },
+
+    resetWorker(workerId) {
+        if (!confirm("この作業者のタイムカードをリセットしますか？")) {
+            return;
+        }
+
+        this.data[this.date][workerId] = {
+            clockIn: "",
+            clockOut: "",
+            status: "未出勤"
+        };
+
+        this.save();
+        this.renderWorkers();
+        this.refreshLinkedViews();
+
+        if (typeof Kousu !== "undefined") {
+            if (Kousu.selectedWorker && Kousu.selectedWorker.id === workerId) {
+                Kousu.selectedWorker = null;
+
+                if (Kousu.inputCard) Kousu.inputCard.classList.add("hidden");
+                if (Kousu.workerSelect) Kousu.workerSelect.classList.remove("hidden");
+            }
+        }
+    },
+
+    clockIn(workerId) {
+        const record = this.getWorkerToday(workerId);
+
+        if (record.clockIn) {
             alert("すでに出勤打刻されています");
             return;
         }
 
-        today.clockIn = this.nowTime();
-        today.status = "勤務中";
+        record.clockIn = this.nowTime();
+        record.status = "勤務中";
 
         this.save();
-        this.updateAll();
+        this.renderWorkers();
+        this.refreshLinkedViews();
     },
 
-    clockOut() {
-        const today = this.getToday();
+    clockOut(workerId) {
+        const record = this.getWorkerToday(workerId);
 
-        if (!today.clockIn) {
+        if (!record.clockIn) {
             alert("先に出勤打刻してください");
             return;
         }
 
-        if (today.clockOut) {
+        if (record.clockOut) {
             alert("すでに退勤打刻されています");
             return;
         }
 
-        today.clockOut = this.nowTime();
-        today.workHours = this.calculateWorkHours(today.clockIn, today.clockOut);
-        today.overtimeHours = Math.max(today.workHours - this.STANDARD_HOURS, 0);
-        today.overtimeHours = this.round2(today.overtimeHours);
-        today.status = "退勤済み";
+        record.clockOut = this.nowTime();
+        record.status = "退勤済み";
 
         this.save();
-        this.updateAll();
-    },
-
-    resetToday() {
-        if (!confirm("今日のタイムカードをリセットしますか？")) return;
-
-        this.createToday();
-        this.updateAll();
-    },
-
-    calculateWorkHours(start, end) {
-        const startMin = this.timeToMinutes(start);
-        const endMin = this.timeToMinutes(end);
-
-        if (endMin <= startMin) return 0;
-
-        let totalMinutes = endMin - startMin;
-
-        const breaks = [
-            ["10:00", "10:10"],
-            ["12:00", "12:45"],
-            ["15:00", "15:10"],
-            ["17:20", "17:30"]
-        ];
-
-        breaks.forEach(b => {
-            totalMinutes -= this.getOverlapMinutes(start, end, b[0], b[1]);
-        });
-
-        if (totalMinutes < 0) totalMinutes = 0;
-
-        return this.round2(totalMinutes / 60);
-    },
-
-    getOverlapMinutes(start, end, breakStart, breakEnd) {
-        const s = this.timeToMinutes(start);
-        const e = this.timeToMinutes(end);
-        const bs = this.timeToMinutes(breakStart);
-        const be = this.timeToMinutes(breakEnd);
-
-        const overlapStart = Math.max(s, bs);
-        const overlapEnd = Math.min(e, be);
-
-        return Math.max(overlapEnd - overlapStart, 0);
-    },
-
-    timeToMinutes(time) {
-        if (!time) return 0;
-
-        const parts = time.split(":");
-        const h = Number(parts[0]);
-        const m = Number(parts[1]);
-
-        return h * 60 + m;
-    },
-
-    round2(value) {
-        return Math.round(value * 100) / 100;
-    },
-
-    getWorkHours() {
-        const today = this.getToday();
-
-        if (today.status === "勤務中" && today.clockIn) {
-            return this.calculateWorkHours(today.clockIn, this.nowTime());
-        }
-
-        return Number(today.workHours || 0);
-    },
-
-    updateView() {
-        const today = this.getToday();
-        const currentWorkHours = this.getWorkHours();
-
-        if (this.status) {
-            this.status.textContent = today.status;
-            this.status.className = "";
-
-            if (today.status === "勤務中") {
-                this.status.classList.add("status-working");
-            } else if (today.status === "退勤済み") {
-                this.status.classList.add("status-finished");
-            } else {
-                this.status.classList.add("status-not-started");
-            }
-        }
-
-        if (this.inTime) this.inTime.textContent = today.clockIn || "--:--";
-        if (this.outTime) this.outTime.textContent = today.clockOut || "--:--";
-        if (this.workHours) this.workHours.textContent = currentWorkHours.toFixed(2) + " h";
-
-        if (this.inBtn) this.inBtn.disabled = !!today.clockIn;
-        if (this.outBtn) this.outBtn.disabled = !today.clockIn || !!today.clockOut;
-    },
-
-    updateAll() {
-        this.updateView();
-
-        if (typeof Dashboard !== "undefined") Dashboard.update();
-
-        if (typeof Kousu !== "undefined" && Kousu.refreshTable) {
-            Kousu.refreshTable();
-        }
+        this.renderWorkers();
+        this.refreshLinkedViews();
     }
 
 };

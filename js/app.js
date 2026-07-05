@@ -12,12 +12,13 @@ function initApp(){
 
     Dashboard.init();
 
+    TimeCard.init();
+
     Kousu.init();
 
     Anken.init();
 
 }
-
 /* ===========================================
    Mostrar fecha
 =========================================== */
@@ -128,7 +129,24 @@ function changeScreen(screen){
     }
 
     document.getElementById("screenTitle").textContent=title;
+// Refrescar pantallas al cambiar
+if (screen === "timecard" && typeof TimeCard !== "undefined") {
+    TimeCard.renderWorkers();
+}
 
+if (screen === "kousu" && typeof Kousu !== "undefined") {
+    if (Kousu.renderWorkerList) {
+        Kousu.renderWorkerList();
+    }
+
+    if (Kousu.refreshTable) {
+        Kousu.refreshTable();
+    }
+}
+
+if (screen === "dashboard" && typeof Dashboard !== "undefined") {
+    Dashboard.update();
+}
 }
 
 /* ===========================================
