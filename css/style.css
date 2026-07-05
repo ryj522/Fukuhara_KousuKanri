@@ -263,3 +263,187 @@ textarea{
     }
 
 }
+#timecardStatus {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.status-not-started {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.status-working {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-finished {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.btn.danger {
+    background: #ef4444;
+    color: white;
+}
+
+.btn.danger:hover {
+    background: #dc2626;
+}
+.timecard-panel {
+    background: white;
+    border-radius: 18px;
+    padding: 28px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    max-width: 760px;
+}
+
+.timecard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 18px;
+    margin-bottom: 24px;
+}
+
+.timecard-header h2 {
+    margin: 0;
+    font-size: 28px;
+}
+.timecard-header p {
+    margin: 6px 0 0;
+    color: #6b7280;
+}
+
+.timecard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-bottom: 26px;
+}
+
+.timecard-item {
+    background: #f9fafb;
+    border-radius: 14px;
+    padding: 22px;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+}
+
+.timecard-item span {
+    display: block;
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.timecard-item strong {
+    font-size: 30px;
+}
+
+.timecard-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.timecard-actions .btn {
+    min-width: 120px;
+    padding: 12px 20px;
+}
+.kousu-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 18px 0 22px;
+}
+
+.kousu-summary div {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+}
+
+.kousu-summary span {
+    display: block;
+    color: #6b7280;
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+
+.kousu-summary strong {
+    font-size: 22px;
+}
+
+.remain-ok {
+    color: #166534;
+}
+
+.remain-warning {
+    color: #b45309;
+}
+
+.remain-danger {
+    color: #991b1b;
+}
+
+.btn.secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn.secondary:hover {
+    background: #4b5563;
+}
+.anken-customer {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 18px;
+}
+
+.anken-project {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px;
+    margin: 12px 0 12px 18px;
+}
+
+.anken-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.anken-title h3 {
+    margin: 0;
+}
+
+.anken-project ul {
+    margin-top: 12px;
+    padding-left: 20px;
+}
+
+.anken-project li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+}
+
+.btn.small {
+    padding: 5px 10px;
+    font-size: 12px;
+}
