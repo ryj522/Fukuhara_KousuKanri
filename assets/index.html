@@ -7,11 +7,12 @@
 
     <link rel="stylesheet" href="css/style.css">
 
-    <script defer src="js/database.js"></script>
-<script defer src="js/dashboard.js"></script>
-<script defer src="js/kousu.js"></script>
-<script defer src="js/anken.js"></script>
-<script defer src="js/app.js"></script>
+    <script src="js/database.js"></script>
+<script src="js/anken.js"></script>
+<script src="js/timecard.js"></script>
+<script src="js/kousu.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/app.js"></script>
 </head>
 
 <body>
@@ -75,13 +76,32 @@
             </div>
 
             <div id="timecard" class="screen hidden">
+
+    <div class="timecard-panel">
+
+        <div class="timecard-header">
+            <div>
                 <h2>タイムカード</h2>
-                <p>（次のバージョンで実装）</p>
+                <p>作業者を選択して打刻してください</p>
             </div>
+        </div>
 
-            <div id="kousu" class="screen hidden">
+        <div id="timecardWorkerList"></div>
 
-                <div class="card">
+    </div>
+
+</div>
+
+           <div id="kousu" class="screen hidden">
+
+    <div id="kousuWorkerSelect" class="card">
+        <h2>本日の作業者</h2>
+        <p>工数入力する作業者を選択してください</p>
+
+        <div id="kousuWorkerList"></div>
+    </div>
+
+    <div class="card hidden" id="kousuInputCard">
 
                     <h2>工数入力</h2>
 
@@ -116,11 +136,13 @@
                     <table>
                         <thead>
                             <tr>
+                                <th>作業者</th>
                                 <th>客先</th>
                                 <th>件名</th>
                                 <th>内容</th>
                                 <th>工数</th>
-                            </tr>
+                                <th>操作</th>
+                           </tr>
                         </thead>
 
                         <tbody id="todayTable"></tbody>
@@ -140,53 +162,56 @@
 
             <div id="anken" class="screen hidden">
 
-    <div class="card">
-        <h2>案件管理</h2>
+                <div class="card">
+                    <h2>案件管理</h2>
 
-        <label>客先名</label>
-        <input type="text" id="newCustomerName" placeholder="例：日本電商">
+                    <label>客先名</label>
+                    <input type="text" id="newCustomerName" placeholder="例：日本電商">
 
-        <button class="btn" onclick="Anken.addCustomer()">
-            客先追加
-        </button>
-    </div>
+                    <button class="btn" onclick="Anken.addCustomer()">
+                        客先追加
+                    </button>
+                </div>
 
-    <br>
+                <br>
 
-    <div class="card">
-        <label>客先選択</label>
-        <select id="ankenCustomerSelect"></select>
+                <div class="card">
+                    <label>客先選択</label>
+                    <select id="ankenCustomerSelect"></select>
 
-        <label>件名</label>
-        <input type="text" id="newProjectName" placeholder="例：制御盤製作">
+                    <label>件名</label>
+                    <input type="text" id="newProjectName" placeholder="例：制御盤製作">
 
-        <button class="btn" onclick="Anken.addProject()">
-            件名追加
-        </button>
-    </div>
+                    <label>指令番号</label>
+                    <input type="text" id="newProjectOrder" placeholder="例：DKK-25001">
 
-    <br>
+                    <button class="btn" onclick="Anken.addProject()">
+                        件名追加
+                    </button>
+                </div>
 
-    <div class="card">
-        <label>件名選択</label>
-        <select id="ankenProjectSelect"></select>
+                <br>
 
-        <label>内容</label>
-        <input type="text" id="newContentName" placeholder="例：配線">
+                <div class="card">
+                    <label>件名選択</label>
+                    <select id="ankenProjectSelect"></select>
 
-        <button class="btn" onclick="Anken.addContent()">
-            内容追加
-        </button>
-    </div>
+                    <label>内容</label>
+                    <input type="text" id="newContentName" placeholder="例：配線">
 
-    <br>
+                    <button class="btn" onclick="Anken.addContent()">
+                        内容追加
+                    </button>
+                </div>
 
-    <div class="card">
-        <h2>案件一覧</h2>
-        <div id="ankenList"></div>
-    </div>
+                <br>
 
-</div>
+                <div class="card">
+                    <h2>案件一覧</h2>
+                    <div id="ankenList"></div>
+                </div>
+
+            </div>
 
             <div id="report" class="screen hidden">
                 <h2>集計</h2>

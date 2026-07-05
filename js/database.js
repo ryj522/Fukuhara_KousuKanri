@@ -1,296 +1,248 @@
-window.DB = {
+const DB = {
 
-    STORAGE_KEY: "FUKUHARA_DB_V21",
-    OLD_STORAGE_KEY: "FUKUHARA_DB",
+    STORAGE_KEY: "FUKUHARA_DB",
 
     data: null,
 
+    //----------------------------------
+    // Inicializar Base de Datos
+    //----------------------------------
+
     init() {
+
         const json = localStorage.getItem(this.STORAGE_KEY);
 
         if (json) {
+
             this.data = JSON.parse(json);
 
-            if (!this.data.workers || this.data.workers.length === 0) {
-                this.data.workers = this.getDefaultWorkers();
-                this.save();
-            }
-
-            if (!this.data.todayKousu) {
-                this.data.todayKousu = [];
-                this.save();
-            }
-
         } else {
+
             this.createSampleData();
+
             this.save();
+
         }
+
     },
 
+    //----------------------------------
+    // Guardar
+    //----------------------------------
+
     save() {
+
         localStorage.setItem(
             this.STORAGE_KEY,
             JSON.stringify(this.data)
         );
+
     },
 
-    getDefaultWorkers() {
-        return [
-            {
-                id: "w001",
-                name: "普久原ルベン",
-                role: "admin",
-                password: "0001",
-                active: true
-            },
-            {
-                id: "w002",
-                name: "普久原フレディー",
-                role: "worker",
-                password: "0002",
-                active: true
-            },
-            {
-                id: "w003",
-                name: "平識デュリ",
-                role: "worker",
-                password: "0003",
-                active: true
-            },
-            {
-                id: "w004",
-                name: "フィン ダイ ロン",
-                role: "worker",
-                password: "0004",
-                active: true
-            },
-            {
-                id: "w005",
-                name: "トゥ ミン フオン",
-                role: "worker",
-                password: "0005",
-                active: true
-            }
-        ];
-    },
+    //----------------------------------
+    // Datos iniciales
+    //----------------------------------
 
     createSampleData() {
+
         this.data = {
+
             customers: [
+
                 {
-                    id: Date.now() + 1,
-                    name: "DKK",
-                    projects: [
+                    id:1,
+                    name:"DKK",
+
+                    projects:[
+
                         {
-                            id: Date.now() + 11,
-                            name: "制御盤製作",
-                            orderNo: "DKK-25001",
-                            contents: ["PLC", "配線", "検査", "デバッグ"]
+                            id:1,
+                            name:"制御盤製作",
+
+                            contents:[
+                                "PLC",
+                                "配線",
+                                "検査",
+                                "デバッグ"
+                            ]
+
                         },
+
                         {
-                            id: Date.now() + 12,
-                            name: "真空炉改造",
-                            orderNo: "DKK-25002",
-                            contents: ["PLC", "配線", "試運転"]
+                            id:2,
+                            name:"真空炉改造",
+
+                            contents:[
+                                "PLC",
+                                "配線",
+                                "試運転"
+                            ]
+
                         }
+
                     ]
+
                 },
+
                 {
-                    id: Date.now() + 2,
-                    name: "アガタ",
-                    projects: [
+                    id:2,
+                    name:"アガタ",
+
+                    projects:[
+
                         {
-                            id: Date.now() + 21,
-                            name: "更新工事",
-                            orderNo: "AGT-25001",
-                            contents: ["PLC", "IOチェック", "試運転"]
+                            id:1,
+                            name:"更新工事",
+
+                            contents:[
+                                "PLC",
+                                "IOチェック",
+                                "試運転"
+                            ]
+
                         }
+
                     ]
+
                 }
+
             ],
 
-            workers: this.getDefaultWorkers(),
+            workers:[
 
-            todayKousu: []
+                "普久原ルベン",
+                "普久原フレディー",
+                "平識デュリ",
+                "フィン ダイ ロン",
+                "トゥ ミン フオン"
+
+            ],
+
+            todayKousu:[
+
+            ]
+
         };
+
     },
 
-    getWorkers() {
-        return this.data.workers || [];
-    },
+    //----------------------------------
+    // Clientes
+    //----------------------------------
 
-    getWorker(id) {
-        return this.getWorkers().find(w => w.id == id);
-    },
+    getCustomers(){
 
-    /* =========================
-       客先
-    ========================= */
-
-    getCustomers() {
         return this.data.customers;
+
     },
 
-    getCustomer(id) {
-        return this.data.customers.find(c => c.id == id);
+    //----------------------------------
+
+    getCustomer(id){
+
+        return this.data.customers.find(c=>c.id==id);
+
     },
 
-    addCustomer(name) {
+    //----------------------------------
+
+    addCustomer(name){
+
+        const id = Date.now();
+
         this.data.customers.push({
-            id: Date.now(),
-            name: name,
-            projects: []
+
+            id:id,
+
+            name:name,
+
+            projects:[]
+
         });
 
         this.save();
+
     },
 
-    updateCustomer(customerId, newName) {
-        const customer = this.getCustomer(customerId);
-        if (!customer) return;
+    //----------------------------------
+    // Proyecto
+    //----------------------------------
 
-        customer.name = newName;
-        this.save();
-    },
+    addProject(customerId,name){
 
-    deleteCustomer(customerId) {
-        this.data.customers =
-            this.data.customers.filter(c => c.id != customerId);
-
-        this.save();
-    },
-
-    /* =========================
-       件名
-    ========================= */
-
-    addProject(customerId, name, orderNo = "") {
-        const customer = this.getCustomer(customerId);
-        if (!customer) return;
+        const customer=this.getCustomer(customerId);
 
         customer.projects.push({
-            id: Date.now(),
-            name: name,
-            orderNo: orderNo,
-            contents: []
+
+            id:Date.now(),
+
+            name:name,
+
+            contents:[]
+
         });
 
         this.save();
+
     },
 
-    updateProject(customerId, projectId, newName, newOrderNo) {
-        const customer = this.getCustomer(customerId);
-        if (!customer) return;
+    //----------------------------------
+    // Contenido
+    //----------------------------------
 
-        const project = customer.projects.find(p => p.id == projectId);
-        if (!project) return;
+    addContent(customerId,projectId,name){
 
-        project.name = newName;
-        project.orderNo = newOrderNo;
+        const customer=this.getCustomer(customerId);
 
-        this.save();
-    },
-
-    deleteProject(customerId, projectId) {
-        const customer = this.getCustomer(customerId);
-        if (!customer) return;
-
-        customer.projects =
-            customer.projects.filter(p => p.id != projectId);
-
-        this.save();
-    },
-
-    /* =========================
-       内容
-    ========================= */
-
-    addContent(customerId, projectId, name) {
-        const customer = this.getCustomer(customerId);
-        if (!customer) return;
-
-        const project = customer.projects.find(p => p.id == projectId);
-        if (!project) return;
+        const project=customer.projects.find(
+            p=>p.id==projectId
+        );
 
         project.contents.push(name);
 
         this.save();
+
     },
 
-    updateContent(customerId, projectId, oldName, newName) {
-        const customer = this.getCustomer(customerId);
-        if (!customer) return;
+    //----------------------------------
+    // Registro diario
+    //----------------------------------
 
-        const project = customer.projects.find(p => p.id == projectId);
-        if (!project) return;
+    addKousu(record){
 
-        const index = project.contents.indexOf(oldName);
-        if (index === -1) return;
+    this.data.todayKousu.push(record);
 
-        project.contents[index] = newName;
+    this.save();
 
-        this.save();
+    if(typeof Dashboard!=="undefined"){
+        Dashboard.update();
+    }
+
     },
 
-    deleteContent(customerId, projectId, name) {
-        const customer = this.getCustomer(customerId);
-        if (!customer) return;
+    //----------------------------------
 
-        const project = customer.projects.find(p => p.id == projectId);
-        if (!project) return;
+    getTodayKousu(){
 
-        project.contents =
-            project.contents.filter(c => c !== name);
-
-        this.save();
-    },
-
-    /* =========================
-       工数
-    ========================= */
-
-    addKousu(record) {
-        this.data.todayKousu.push(record);
-
-        this.save();
-
-        if (typeof Dashboard !== "undefined") {
-            Dashboard.update();
-        }
-    },
-
-    getTodayKousu() {
         return this.data.todayKousu;
+
     },
 
-    updateKousu(index, record) {
-        this.data.todayKousu[index] = record;
-        this.save();
+    //----------------------------------
 
-        if (typeof Dashboard !== "undefined") {
-            Dashboard.update();
-        }
-    },
+    deleteKousu(index){
 
-    deleteKousu(index) {
-        this.data.todayKousu.splice(index, 1);
+        this.data.todayKousu.splice(index,1);
 
         this.save();
 
-        if (typeof Dashboard !== "undefined") {
-            Dashboard.update();
-        }
-    },
-
-    clearTodayKousu() {
-        this.data.todayKousu = [];
-        this.save();
-
-        if (typeof Dashboard !== "undefined") {
-            Dashboard.update();
-        }
     }
 
 };
+
+
+/* =======================================
+   Inicializar automáticamente
+======================================= */
 
 DB.init();

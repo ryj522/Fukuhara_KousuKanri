@@ -5,45 +5,38 @@ const Dashboard = {
     },
 
     update() {
+
         if (!DB || !DB.data) return;
 
         const records = DB.getTodayKousu();
 
-        let inputTotal = 0;
+        let total = 0;
 
         records.forEach(r => {
-            inputTotal += Number(r.hours || 0);
+            total += Number(r.hours);
         });
 
-        // 勤務時間：TimeCardから取得
-        let workHours = 0;
+        // Tiempo trabajado (TimeCard)
+        // Por ahora usamos 8 horas como ejemplo.
+        // Luego lo conectaremos al módulo TimeCard.
+        const workHours = 8.0;
 
-        if (typeof TimeCard !== "undefined" && TimeCard.getWorkHours) {
-            workHours = TimeCard.getWorkHours();
-        }
+        const remain = workHours - total;
 
-        const remain = workHours - inputTotal;
+        document.getElementById("workHours").textContent =
+            workHours.toFixed(2) + " h";
 
-        this.setText("workHours", workHours.toFixed(2) + " h");
-        this.setText("inputHours", inputTotal.toFixed(2) + " h");
-        this.setText("remainHours", remain.toFixed(2) + " h");
+        document.getElementById("inputHours").textContent =
+            total.toFixed(2) + " h";
 
-        let percent = 0;
+        document.getElementById("remainHours").textContent =
+            remain.toFixed(2) + " h";
 
-        if (workHours > 0) {
-            percent = Math.min((inputTotal / workHours) * 100, 100);
-        }
+        const percent = Math.min((total / workHours) * 100, 100);
 
-        const progressBar = document.getElementById("progressBar");
+        document.getElementById("progressBar").style.width =
+            percent + "%";
 
-        if (progressBar) {
-            progressBar.style.width = percent + "%";
-        }
-    },
-
-    setText(id, text) {
-        const el = document.getElementById(id);
-        if (el) el.textContent = text;
     }
 
 };
