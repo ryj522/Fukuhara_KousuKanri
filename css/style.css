@@ -724,16 +724,68 @@ textarea{
     color: #111827 !important;
 }
 
-/* 勤務中だけカードを緑に光らせる */
-.worker-timecard-card.tc-card-working {
-    border: 3px solid #22c55e !important;
-    box-shadow:
-        0 0 0 2px rgba(34, 197, 94, 0.25),
-        0 0 18px rgba(34, 197, 94, 0.75),
-        0 10px 24px rgba(0, 0, 0, 0.18) !important;
+/* =====================================
+   ESTADOS DE TARJETA TIMECARD
+===================================== */
+
+.worker-timecard-card {
+    border: 4px solid #9ca3af !important;
 }
 
-/* 未出勤・退勤済みは普通のカード */
-.worker-timecard-card:not(.tc-card-working) {
-    border: 1px solid rgba(255,255,255,0.35);
+.worker-timecard-card.tc-card-working {
+    border: 4px solid #22c55e !important;
+    box-shadow: 0 0 18px rgba(34, 197, 94, 0.75) !important;
+}
+
+.worker-timecard-card.tc-card-outing {
+    border: 4px solid #facc15 !important;
+    box-shadow: 0 0 18px rgba(250, 204, 21, 0.75) !important;
+}
+
+.worker-timecard-card.tc-card-finished {
+    border: 4px solid #3b82f6 !important;
+    box-shadow: 0 0 18px rgba(59, 130, 246, 0.75) !important;
+}
+/* =====================================
+   TIMECARD HISTORY
+===================================== */
+
+.worker-history-toggle {
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(0,0,0,.15);
+    text-align: center;
+    font-weight: bold;
+    cursor: pointer;
+    color: #374151;
+    user-select: none;
+}
+
+.worker-history-toggle:hover {
+    color: #2563eb;
+}
+
+.worker-history {
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(255,255,255,.75);
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+.worker-history-lines div {
+    border-bottom: 1px solid #e5e7eb;
+    padding: 3px 0;
+}
+
+.worker-history-summary {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 2px solid #d1d5db;
+    font-weight: bold;
+}
+
+.hidden {
+    display: none;
 }

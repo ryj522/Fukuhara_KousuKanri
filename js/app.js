@@ -18,6 +18,8 @@ function initApp(){
 
     Anken.init();
 
+Report.init();
+
 }
 /* ===========================================
    Mostrar fecha
@@ -111,13 +113,15 @@ function changeScreen(screen){
             break;
 
         case "kousu":
-            title="工数入力";
+            title="作業日報";
             break;
 
         case "anken":
             title="案件管理";
             break;
-
+        case "employee":
+            title = "従業員管理";
+            break;
         case "report":
             title="集計";
             break;
@@ -147,7 +151,15 @@ if (screen === "kousu" && typeof Kousu !== "undefined") {
 if (screen === "dashboard" && typeof Dashboard !== "undefined") {
     Dashboard.update();
 }
+
+if (screen === "employee" && typeof renderEmployeeManagement !== "undefined") {
+    renderEmployeeManagement();
 }
+if (screen === "report" && typeof Report !== "undefined") {
+    Report.renderAttendance();
+}
+}
+
 
 /* ===========================================
    Inicio futuro

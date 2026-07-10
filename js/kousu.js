@@ -22,12 +22,17 @@ const Kousu = {
         this.createCancelButton();
         this.createBackButton();
 
-        this.loadCustomers();
-        this.renderWorkerList();
+        this.selectedWorker = null;
+
+if (this.inputCard) this.inputCard.classList.add("hidden");
+if (this.workerSelect) this.workerSelect.classList.remove("hidden");
+
+this.loadCustomers();
+this.renderWorkerList();
 
         this.customer.addEventListener("change", () => this.loadProjects());
         this.project.addEventListener("change", () => this.loadContents());
-        this.button.addEventListener("click", () => this.save());
+        this.button.onclick = () => this.save();
 
         this.hour.addEventListener("keydown", (e) => {
             if (e.key === "Enter") this.save();
@@ -42,12 +47,17 @@ getWorkerId(worker) {
 getWorkerName(worker) {
     return worker.name || worker.workerName || worker;
 },
-    renderWorkerList() {
-        if (!this.workerList) return;
+   renderWorkerList() {
+    if (!this.workerList) return;
+
+    this.selectedWorker = null;
+
+    if (this.inputCard) this.inputCard.classList.add("hidden");
+    if (this.workerSelect) this.workerSelect.classList.remove("hidden");
 
         this.workerList.innerHTML = "";
 
-        const workers = DB.getWorkers();
+        const workers = getActiveEmployees();
         const todayData = TimeCard.data[TimeCard.date] || {};
 
         workers.forEach(worker => {
@@ -63,8 +73,29 @@ getWorkerName(worker) {
             btn.style.fontSize = "16px";
 
             const workerName = this.getWorkerName(worker);
-            btn.textContent = `${workerName}　${record.status}`;
-            btn.onclick = () => this.selectWorker(worker);
+            const workHours = this.getWorkerWorkHours(workerId);
+
+let inputTotal = 0;
+DB.getTodayKousu().forEach(r => {
+    if (r.employeeId === workerId) {
+        inputTotal += Number(r.hours || 0);
+    }
+});
+
+const remain = workHours - inputTotal;
+
+if (remain === 0 && workHours > 0) {
+    btn.style.border = "2px solid #4CAF50";
+}
+else if (remain < 0) {
+    btn.style.border = "2px solid #F44336";
+}
+else {
+    btn.style.border = "2px solid #FFC107";
+}
+
+btn.textContent = `${workerName}　${record.status}　残り ${remain.toFixed(2)}h`;
+btn.onclick = () => this.selectWorker(worker);
 
             this.workerList.appendChild(btn);
         });
@@ -85,7 +116,7 @@ getWorkerName(worker) {
 
     const title = this.inputCard.querySelector("h2");
     if (title) {
-        title.textContent = `工数入力：${this.selectedWorker.name}`;
+        title.textContent = `作業日報：${this.selectedWorker.name}`;
     }
 
     this.refreshTable();
@@ -109,7 +140,8 @@ getWorkerName(worker) {
             if (this.inputCard) this.inputCard.classList.add("hidden");
             if (this.workerSelect) this.workerSelect.classList.remove("hidden");
 
-            this.refreshTable();
+            this.renderWorkerList();
+this.refreshTable();
         });
     },
 
@@ -127,7 +159,7 @@ getWorkerName(worker) {
                 <strong id="kousuWorkHours">0.00 h</strong>
             </div>
             <div>
-                <span>工数入力</span>
+                <span>作業日報</span>
                 <strong id="kousuInputHours">0.00 h</strong>
             </div>
             <div>
@@ -176,18 +208,28 @@ getWorkerName(worker) {
     },
 
     loadContents() {
-        this.content.innerHTML = '<option value="">選択してください</option>';
+    this.content.innerHTML = '<option value="">選択してください</option>';
 
-        const customer = DB.getCustomer(this.customer.value);
-        if (!customer) return;
+    const customer = DB.getCustomer(this.customer.value);
+    if (!customer) return;
 
-        const project = customer.projects.find(p => p.id == this.project.value);
-        if (!project) return;
+    const project = customer.projects.find(p => p.id == this.project.value);
+    if (!project) return;
 
-        project.contents.forEach(c => {
-            this.content.innerHTML += `<option>${c}</option>`;
-        });
-    },
+    project.contents.forEach(c => {
+        const alreadyUsed = DB.getTodayKousu().some(r =>
+            this.selectedWorker &&
+            r.employeeId === this.selectedWorker.id &&
+            r.customer === customer.name &&
+            r.project === project.name &&
+            r.content === c
+        );
+
+        if (!alreadyUsed) {
+            this.content.innerHTML += `<option value="${c}">${c}</option>`;
+        }
+    });
+},
 
     save() {
         if (!this.selectedWorker) {
@@ -201,7 +243,7 @@ getWorkerName(worker) {
         const available = this.getAvailableHours();
 
         if (this.editingIndex === -1 && hours > available) {
-            alert("工数入力が勤務時間を超えています。\n\n残り工数：" + available.toFixed(2) + " h");
+            alert("作業日報が勤務時間を超えています。\n\n残り工数：" + available.toFixed(2) + " h");
             this.hour.focus();
             return;
         }
@@ -211,7 +253,7 @@ getWorkerName(worker) {
             const oldHours = Number(old.hours || 0);
 
             if (hours > available + oldHours) {
-                alert("工数入力が勤務時間を超えています。\n\n残り工数：" + (available + oldHours).toFixed(2) + " h");
+                alert("作業日報が勤務時間を超えています。\n\n残り工数：" + (available + oldHours).toFixed(2) + " h");
                 this.hour.focus();
                 return;
             }
@@ -238,8 +280,16 @@ getWorkerName(worker) {
             this.exitEditMode();
         }
 
-        this.afterSave();
         this.refreshTable();
+
+const remain = this.getAvailableHours();
+
+if (remain > 0) {
+    alert("作業日報がまだ不足しています。\n\n残り工数：" + remain.toFixed(2) + " h");
+}
+
+this.loadContents();
+this.afterSave();
     },
 
     validateForm() {
