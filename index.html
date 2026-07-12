@@ -29,14 +29,59 @@
             <small>工数管理システム V2.0</small>
         </div>
 
-<nav>
-    <button class="menu active" data-screen="dashboard">🏠 Dashboard</button>
-    <button class="menu" data-screen="timecard">⏰ タイムカード</button>
-    <button class="menu" data-screen="kousu">📝 作業日報</button>
-    <button class="menu" data-screen="anken">📁 案件管理</button>
-    <button class="menu" data-screen="employee">👷 従業員管理</button>
-    <button class="menu" data-screen="report">📊 集計</button>
-    <button class="menu" data-screen="setting">⚙ 設定</button>
+<nav class="sidebar-nav">
+
+    <div class="sidebar-group">
+        <div class="sidebar-group-title">メイン</div>
+
+        <button class="menu active" data-screen="dashboard">
+            <span class="menu-symbol">⌂</span>
+            <span>Dashboard</span>
+        </button>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-group">
+        <div class="sidebar-group-title">業務</div>
+
+        <button class="menu" data-screen="timecard">
+            <span class="menu-symbol">◷</span>
+            <span>タイムカード</span>
+        </button>
+
+        <button class="menu" data-screen="kousu">
+            <span class="menu-symbol">▤</span>
+            <span>作業日報</span>
+        </button>
+
+        <button class="menu" data-screen="anken">
+            <span class="menu-symbol">▣</span>
+            <span>案件管理</span>
+        </button>
+
+        <button class="menu" data-screen="employee">
+            <span class="menu-symbol">○</span>
+            <span>従業員管理</span>
+        </button>
+
+        <button class="menu" data-screen="report">
+            <span class="menu-symbol">▥</span>
+            <span>集計</span>
+        </button>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-group">
+        <div class="sidebar-group-title">システム</div>
+
+        <button class="menu" data-screen="setting">
+            <span class="menu-symbol">⚙</span>
+            <span>設定</span>
+        </button>
+    </div>
+
 </nav>
 
     </aside>
@@ -139,20 +184,7 @@
 
                     <h2>本日の工数一覧</h2>
 
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>作業者</th>
-                                <th>客先</th>
-                                <th>件名</th>
-                                <th>内容</th>
-                                <th>工数</th>
-                                <th>操作</th>
-                           </tr>
-                        </thead>
-
-                        <tbody id="todayTable"></tbody>
-                    </table>
+                    <div id="todayTable" class="kousu-report-list"></div>
 
                     <br>
 

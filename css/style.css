@@ -19,53 +19,93 @@ body{
    SIDEBAR
 ===================================== */
 
-#sidebar{
-    width:260px;
-    background:#1f2937;
-    color:white;
-    display:flex;
-    flex-direction:column;
+#sidebar {
+    width: 260px;
+    min-height: 100vh;
+
+    background: #26313d;
+    color: #e5e7eb;
+
+    display: flex;
+    flex-direction: column;
+
+    border-right: 1px solid #3b4652;
 }
 
-.logo{
-    padding:25px;
-    border-bottom:1px solid rgba(255,255,255,.1);
+.logo {
+    padding: 28px 24px 24px;
+
+    background: #222c36;
+    border-bottom: 1px solid #3b4652;
 }
 
-.logo h2{
-    font-size:24px;
-    margin-bottom:5px;
+.logo h2 {
+    margin-bottom: 6px;
+
+    color: #f3f4f6;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
 }
 
-.logo small{
-    color:#cbd5e1;
+.logo small {
+    color: #9ca3af;
+    font-size: 12px;
 }
 
-nav{
-    padding:15px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
+nav {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    padding: 18px 14px;
 }
 
-.menu{
-    border:none;
-    background:transparent;
-    color:white;
-    text-align:left;
-    padding:14px;
-    border-radius:10px;
-    cursor:pointer;
-    font-size:15px;
-    transition:.2s;
+.menu {
+    position: relative;
+
+    width: 100%;
+    padding: 13px 14px 13px 18px;
+
+    border: none;
+    border-radius: 7px;
+
+    background: transparent;
+    color: #cbd5e1;
+
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.18s ease,
+        color 0.18s ease;
 }
 
-.menu:hover{
-    background:#374151;
+.menu:hover {
+    background: #313d49;
+    color: #ffffff;
 }
 
-.menu.active{
-    background:#2563eb;
+.menu.active {
+    background: #384653;
+    color: #ffffff;
+}
+
+.menu.active::before {
+    content: "";
+
+    position: absolute;
+    top: 9px;
+    bottom: 9px;
+    left: 0;
+
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+
+    background: #aab4bf;
 }
 
 /* =====================================
@@ -107,7 +147,7 @@ header{
 .cards{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:20px;
+    gap:26px;
     margin-bottom:30px;
 }
 
@@ -294,13 +334,14 @@ textarea{
     background: #dc2626;
 }
 .timecard-panel {
+    width: 100%;
+    max-width: none;
+
     background: white;
     border-radius: 18px;
     padding: 28px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-    max-width: 760px;
 }
-
 .timecard-header {
     display: flex;
     justify-content: space-between;
@@ -357,19 +398,59 @@ textarea{
 }
 .kousu-summary {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
     margin: 18px 0 22px;
 }
-
 .kousu-summary div {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 16px;
+
+    border-radius: 14px;
+    padding: 18px;
     text-align: center;
+
+    box-shadow: 0 3px 8px rgba(0,0,0,.08);
+
+    transition: .2s;
+}
+/* 勤務時間 */
+
+.kousu-summary div:nth-child(1){
+
+    background:#dbeafe;
+    border:2px solid #60a5fa;
 }
 
+/* 作業日報 */
+
+.kousu-summary div:nth-child(2){
+
+    background:#f3f4f6;
+    border:2px solid #d1d5db;
+}
+
+/* 残り */
+
+.kousu-summary div:nth-child(3) {
+    grid-column: 1 / 3;
+}
+/* 残り：入力が未完了 */
+
+.kousu-summary .kousu-remain-pending {
+    background: #fef3c7;
+    border: 2px solid #facc15;
+}
+
+/* 入力完了 */
+
+.kousu-summary .kousu-remain-complete {
+    background: #dcfce7;
+    border: 2px solid #4ade80;
+}
+
+.kousu-summary .kousu-remain-complete span,
+.kousu-summary .kousu-remain-complete strong {
+    color: #166534;
+}
 .kousu-summary span {
     display: block;
     color: #6b7280;
@@ -377,10 +458,11 @@ textarea{
     margin-bottom: 6px;
 }
 
-.kousu-summary strong {
-    font-size: 22px;
-}
+.kousu-summary strong{
 
+    font-size:30px;
+    font-weight:800;
+}
 .remain-ok {
     color: #166534;
 }
@@ -451,13 +533,16 @@ textarea{
    WORKER TIMECARD
 ===================================== */
 
-#timecardWorkerList{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
-    gap:20px;
-    margin-top:25px;
+#timecardWorkerList {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(360px, 1fr)
+    );
+    gap: 20px;
+    margin-top: 25px;
+    align-items: stretch;
 }
-
 .worker-timecard-card{
     background:#f8fafc;
     border:1px solid #dbe4ee;
@@ -548,13 +633,14 @@ textarea{
 }
 
 .worker-name {
-    font-size: 26px;
+    font-size: clamp(20px, 1.5vw, 26px);
     font-weight: 800;
     color: #111827;
     margin-bottom: 12px;
+    text-align: center;
+    white-space: nowrap;
     text-shadow: 0 1px 1px rgba(255,255,255,0.5);
 }
-
 .worker-status {
     display: inline-block;
     padding: 6px 12px;
@@ -788,4 +874,678 @@ textarea{
 
 .hidden {
     display: none;
+}
+/* =====================================
+   BOTÓN 早出申請
+===================================== */
+
+.worker-buttons .tc-btn.is-sky {
+    background: #38bdf8 !important;
+    color: white !important;
+    border: 2px solid #0284c7 !important;
+}
+
+.worker-buttons .tc-btn.is-sky:hover {
+    background: #0ea5e9 !important;
+}
+
+.worker-buttons .tc-btn.is-sky:disabled {
+    background: #38bdf8 !important;
+    color: white !important;
+    opacity: 1;
+    cursor: default;
+}
+.history-main-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.history-early-badge {
+    background: #9ca3af;
+    color: #ffffff;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+/* =====================================
+   PROGRESO 早出申請
+===================================== */
+
+.worker-buttons .early-hold-btn {
+    position: relative;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+}
+
+.worker-buttons .early-hold-btn .early-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 100%;
+    background: rgba(2, 132, 199, 0.65);
+    transition: width 0.03s linear;
+    pointer-events: none;
+}
+
+.worker-buttons .early-hold-btn .early-label {
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+}
+/* =====================================
+   外出・戻り テストモード
+===================================== */
+
+.test-out-editor {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 2px dashed #9ca3af;
+}
+
+.test-out-title {
+    margin-bottom: 12px;
+    font-size: 15px;
+    font-weight: 800;
+    color: #374151;
+}
+
+.test-out-row {
+    display: grid;
+    grid-template-columns: 42px 1fr 42px 1fr auto;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.75);
+    border-radius: 10px;
+}
+
+.test-out-row label {
+    font-weight: bold;
+    color: #374151;
+}
+
+.test-out-row input[type="time"] {
+    min-width: 0;
+    padding: 7px;
+}
+
+.test-out-delete {
+    padding: 7px 10px;
+}
+
+.test-out-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 700px) {
+    .test-out-row {
+        grid-template-columns: 42px 1fr;
+    }
+
+    .test-out-delete {
+        grid-column: 1 / -1;
+    }
+}
+/* =====================================
+   TIMECARD 詳細・勤務計算
+===================================== */
+
+.timecard-detail-section {
+    margin-bottom: 16px;
+}
+
+.timecard-detail-title {
+    margin-bottom: 10px;
+    font-size: 15px;
+    font-weight: 800;
+    color: #1f2937;
+}
+
+.timecard-calculation {
+    padding-top: 14px;
+    border-top: 2px solid #d1d5db;
+}
+
+.timecard-calc-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 4px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.timecard-calc-row span {
+    font-weight: 700;
+    color: #374151;
+}
+
+.timecard-calc-row strong {
+    font-size: 16px;
+    color: #111827;
+}
+
+.timecard-calc-row.deduction strong {
+    color: #b45309;
+}
+
+.timecard-accounted-time {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+
+    margin-top: 14px;
+    padding: 14px;
+
+    background: #dbeafe;
+    border: 2px solid #60a5fa;
+    border-radius: 10px;
+}
+
+.timecard-accounted-time span,
+.timecard-accounted-time strong {
+    font-size: 18px;
+    font-weight: 900;
+    color: #1e3a8a;
+}
+/* =====================================
+   作業日報　本日の作業者カード
+===================================== */
+
+#kousuWorkerList {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fill,
+        minmax(250px, 1fr)
+    );
+    gap: 18px;
+    margin-top: 18px;
+}
+
+.kousu-worker-card {
+    width: 100%;
+    min-height: 155px;
+
+    padding: 20px;
+
+    background: #ffffff;
+    border: 2px solid #d1d5db;
+    border-radius: 15px;
+
+    text-align: left;
+    cursor: pointer;
+
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        border-color 0.18s ease;
+}
+
+.kousu-worker-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+/* 作業日報が未完了 */
+
+.kousu-worker-card.is-pending {
+    border-color: #f2b705;
+    background: #fffdf7;
+}
+
+/* 作業日報が完了 */
+
+.kousu-worker-card.is-complete {
+    border-color: #34a853;
+    background: #f6fff8;
+}
+
+.kousu-worker-name {
+    color: #111827;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.4;
+}
+
+.kousu-worker-divider {
+    height: 1px;
+    margin: 14px 0;
+
+    background: #e5e7eb;
+}
+
+.kousu-worker-status {
+    display: inline-block;
+
+    padding: 5px 14px;
+    border-radius: 999px;
+
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+/* 勤務中 */
+
+.kousu-worker-status.is-working {
+    background: #22a447;
+}
+
+/* 退勤済み */
+
+.kousu-worker-status.is-finished {
+    background: #3478dc;
+}
+
+/* 外出中 */
+
+.kousu-worker-status.is-outing {
+    background: #d99a00;
+}
+
+/* 入力完了 */
+
+.kousu-worker-status.is-complete-status {
+    background: #22a447;
+}
+
+.kousu-worker-remain {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+
+    margin-top: 16px;
+
+    color: #b45309;
+}
+
+.kousu-worker-remain span {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.kousu-worker-remain strong {
+    font-size: 21px;
+    font-weight: 900;
+}
+
+/* Smartphone */
+
+@media (max-width: 700px) {
+    #kousuWorkerList {
+        grid-template-columns: 1fr;
+    }
+
+    .kousu-worker-card {
+        min-height: 135px;
+    }
+}
+.worker-timecard-card {
+    width: 100%;
+    height: 100%;
+}
+/* =====================================
+   SIDEBAR MODERNO
+===================================== */
+
+#sidebar {
+    width: 260px;
+    min-height: 100vh;
+    background: #27323d;
+    border-right: 1px solid #3b4652;
+}
+
+#sidebar .logo {
+    padding: 27px 24px 23px;
+    background: #222c36;
+    border-bottom: 1px solid #3b4652;
+}
+
+#sidebar .logo h2 {
+    color: #f3f4f6;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+#sidebar .logo small {
+    color: #9ca3af;
+    font-size: 12px;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 20px 14px;
+}
+
+.sidebar-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.sidebar-group-title {
+    padding: 0 13px;
+    margin-bottom: 7px;
+
+    color: #7f8b98;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.sidebar-divider {
+    height: 1px;
+    margin: 16px 10px;
+    background: #3b4652;
+}
+
+#sidebar .menu {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    gap: 13px;
+
+    width: 100%;
+    min-height: 44px;
+    padding: 11px 14px;
+
+    border: none;
+    border-radius: 7px;
+
+    background: transparent;
+    color: #c5cdd5;
+
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.18s ease,
+        color 0.18s ease;
+}
+
+#sidebar .menu:hover {
+    background: #313d48;
+    color: #ffffff;
+}
+
+#sidebar .menu.active {
+    background: #3a4652;
+    color: #ffffff;
+}
+
+#sidebar .menu.active::before {
+    content: "";
+
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    left: 0;
+
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+
+    background: #aab3bc;
+}
+
+.menu-symbol {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 20px;
+
+    color: #9da8b3;
+    font-size: 18px;
+    font-weight: 400;
+}
+
+#sidebar .menu.active .menu-symbol,
+#sidebar .menu:hover .menu-symbol {
+    color: #e5e7eb;
+}
+/* =========================================
+   MENÚ LATERAL MODERNO - 普久原電機
+========================================= */
+
+#sidebar {
+    width: 270px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #102a43 0%,
+            #163b5c 48%,
+            #0b2239 100%
+        );
+
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+
+    min-height: 100vh;
+    padding: 0;
+
+    box-shadow: 8px 0 24px rgba(15, 42, 67, 0.16);
+
+    position: relative;
+    z-index: 10;
+}
+
+/* Parte superior con el nombre de la empresa */
+
+#sidebar .logo {
+    padding: 30px 24px 26px;
+
+    background: rgba(7, 29, 50, 0.26);
+
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+#sidebar .logo h2 {
+    margin: 0 0 7px;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: #ffffff;
+}
+
+#sidebar .logo small {
+    color: #a9c6dc;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+/* Área de botones */
+
+#sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+
+    padding: 22px 16px;
+}
+
+/* Botón normal */
+
+#sidebar .menu {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    border: 1px solid transparent;
+    border-radius: 12px;
+
+    background: transparent;
+    color: #d7e7f3;
+
+    text-align: left;
+
+    padding: 14px 16px;
+
+    font-size: 15px;
+    font-weight: 650;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+/* Al pasar el mouse */
+
+#sidebar .menu:hover {
+    background: rgba(151, 199, 231, 0.13);
+    border-color: rgba(173, 216, 244, 0.16);
+
+    color: #ffffff;
+
+    transform: translateX(3px);
+}
+
+/* Pantalla seleccionada */
+
+#sidebar .menu.active {
+    background:
+        linear-gradient(
+            90deg,
+            #cbe8fa 0%,
+            #9fd2ef 100%
+        );
+
+    color: #12344f;
+
+    border-color: rgba(255, 255, 255, 0.45);
+
+    font-weight: 800;
+
+    box-shadow:
+        0 7px 18px rgba(3, 24, 43, 0.22),
+        inset 4px 0 0 #ffffff;
+
+    transform: translateX(3px);
+}
+
+/* Evita colores anteriores en el botón activo */
+
+#sidebar .menu.active:hover {
+    background:
+        linear-gradient(
+            90deg,
+            #d9f0fc 0%,
+            #acd9f1 100%
+        );
+
+    color: #102f49;
+}
+
+/* Área principal con fondo azul grisáceo claro */
+
+#main {
+    background:
+        linear-gradient(
+            135deg,
+            #f3f7fb 0%,
+            #eaf1f7 100%
+        );
+}
+
+/* Cabecera superior */
+
+#main > header {
+    background: rgba(255, 255, 255, 0.94);
+
+    border-bottom: 1px solid #d9e4ed;
+
+    box-shadow: 0 3px 14px rgba(15, 42, 67, 0.06);
+}
+
+#screenTitle {
+    color: #163b5c;
+    font-weight: 800;
+}
+
+#today {
+    color: #52718a;
+    font-weight: 600;
+}
+
+/* Adaptación para pantallas pequeñas */
+
+@media (max-width: 900px) {
+    #sidebar {
+        width: 225px;
+    }
+
+    #sidebar .logo {
+        padding: 24px 18px;
+    }
+
+    #sidebar .logo h2 {
+        font-size: 21px;
+    }
+
+    #sidebar nav {
+        padding: 18px 12px;
+    }
+
+    #sidebar .menu {
+        padding: 13px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 700px) {
+    #sidebar {
+        width: 100%;
+        min-height: auto;
+    }
+
+    #sidebar .logo {
+        padding: 18px 20px;
+    }
+
+    #sidebar nav {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 12px;
+    }
+
+    #sidebar .menu {
+        width: auto;
+        min-width: max-content;
+        white-space: nowrap;
+        transform: none;
+    }
+
+    #sidebar .menu:hover,
+    #sidebar .menu.active {
+        transform: none;
+    }
 }

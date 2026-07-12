@@ -3,6 +3,15 @@ const Kousu = {
     editingIndex: -1,
     selectedWorker: null,
 
+    ACCOUNTING_MODE: "company",
+
+    WORK_START: "08:30",
+    WORK_END: "17:20",
+    OVERTIME_START: "17:30",
+
+    STANDARD_ACCOUNTING_HOURS: 8.00,
+    ACCOUNTING_UNIT_MINUTES: 15,
+
     init() {
         this.workerSelect = document.getElementById("kousuWorkerSelect");
         this.workerList = document.getElementById("kousuWorkerList");
@@ -67,37 +76,76 @@ getWorkerName(worker) {
             if (!record || !record.clockIn) return;
 
             const btn = document.createElement("button");
-            btn.className = "btn";
-            btn.style.margin = "8px";
-            btn.style.padding = "14px 22px";
-            btn.style.fontSize = "16px";
+btn.type = "button";
+btn.className = "kousu-worker-card";
 
-            const workerName = this.getWorkerName(worker);
-            const workHours = this.getWorkerWorkHours(workerId);
+const workerName = this.getWorkerName(worker);
+const workHours = this.getWorkerWorkHours(workerId);
 
 let inputTotal = 0;
+
 DB.getTodayKousu().forEach(r => {
     if (r.employeeId === workerId) {
         inputTotal += Number(r.hours || 0);
     }
 });
 
-const remain = workHours - inputTotal;
+const remain = Math.max(workHours - inputTotal, 0);
+const isComplete =
+    Math.abs(remain) < 0.001 &&
+    workHours > 0;
 
-if (remain === 0 && workHours > 0) {
-    btn.style.border = "2px solid #4CAF50";
-}
-else if (remain < 0) {
-    btn.style.border = "2px solid #F44336";
-}
-else {
-    btn.style.border = "2px solid #FFC107";
+let statusClass = "is-finished";
+let statusText = record.status;
+
+if (record.status === "勤務中") {
+    statusClass = "is-working";
 }
 
-btn.textContent = `${workerName}　${record.status}　残り ${remain.toFixed(2)}h`;
+if (record.status === "外出中") {
+    statusClass = "is-outing";
+}
+
+if (record.status === "退勤済み") {
+    statusClass = "is-finished";
+}
+
+if (isComplete) {
+    btn.classList.add("is-complete");
+} else {
+    btn.classList.add("is-pending");
+}
+
+btn.innerHTML = `
+    <div class="kousu-worker-name">
+        ${workerName}
+    </div>
+
+    <div class="kousu-worker-divider"></div>
+
+    ${
+        isComplete
+            ? `
+                <div class="kousu-worker-status is-complete-status">
+                    入力完了
+                </div>
+            `
+            : `
+                <div class="kousu-worker-status ${statusClass}">
+                    ${statusText}
+                </div>
+
+                <div class="kousu-worker-remain">
+                    <span>残り</span>
+                    <strong>${remain.toFixed(2)} h</strong>
+                </div>
+            `
+    }
+`;
+
 btn.onclick = () => this.selectWorker(worker);
 
-            this.workerList.appendChild(btn);
+this.workerList.appendChild(btn);
         });
 
         if (this.workerList.innerHTML === "") {
@@ -162,10 +210,10 @@ this.refreshTable();
                 <span>作業日報</span>
                 <strong id="kousuInputHours">0.00 h</strong>
             </div>
-            <div>
-                <span>残り</span>
-                <strong id="kousuRemainHours">0.00 h</strong>
-            </div>
+            <div id="kousuRemainBox">
+    <span id="kousuRemainLabel">残り</span>
+    <strong id="kousuRemainHours">0.00 h</strong>
+</div>
         `;
 
         card.insertBefore(summary, card.children[1]);
@@ -387,44 +435,309 @@ this.afterSave();
 
         this.refreshTable();
     },
+renderDailyReport(records) {
+    if (!this.table) return;
 
-    refreshTable() {
-        if (!this.table) return;
+    if (!records || records.length === 0) {
+        this.table.innerHTML = `
+            <div class="kousu-report-empty">
+                本日の工数登録はありません。
+            </div>
+        `;
+        return;
+    }
 
-        this.table.innerHTML = "";
+    /*
+     * 客先 → 件名 → 内容 の順番で並べる
+     */
+    records.sort((a, b) => {
+        const customerCompare = String(
+            a.customer || ""
+        ).localeCompare(
+            String(b.customer || ""),
+            "ja"
+        );
 
-        let total = 0;
+        if (customerCompare !== 0) {
+            return customerCompare;
+        }
 
-        DB.getTodayKousu().forEach((r, index) => {
-            if (this.selectedWorker && r.employeeId !== this.selectedWorker.id) return;
+        const projectCompare = String(
+            a.project || ""
+        ).localeCompare(
+            String(b.project || ""),
+            "ja"
+        );
 
-            total += Number(r.hours || 0);
+        if (projectCompare !== 0) {
+            return projectCompare;
+        }
 
-            this.table.innerHTML += `
-                <tr>
-                    <td>${r.employeeName || ""}</td>
-                    <td>${r.customer}</td>
-                    <td>${r.project}</td>
-                    <td>${r.content}</td>
-                    <td>${Number(r.hours || 0).toFixed(2)}</td>
-                    <td>
-                        <button class="btn" onclick="Kousu.edit(${index})">編集</button>
-                        <button class="btn danger" onclick="Kousu.delete(${index})">削除</button>
-                    </td>
-                </tr>
+        const contentCompare = String(
+            a.content || ""
+        ).localeCompare(
+            String(b.content || ""),
+            "ja"
+        );
+
+        if (contentCompare !== 0) {
+            return contentCompare;
+        }
+
+        return String(
+            a.employeeName || ""
+        ).localeCompare(
+            String(b.employeeName || ""),
+            "ja"
+        );
+    });
+
+    /*
+     * 客先・件名・内容ごとにグループ化
+     */
+    const customers = {};
+
+    records.forEach(record => {
+        const customerName =
+            record.customer || "客先未設定";
+
+        const projectName =
+            record.project || "件名未設定";
+
+        const contentName =
+            record.content || "内容未設定";
+
+        if (!customers[customerName]) {
+            customers[customerName] = {
+                total: 0,
+                projects: {}
+            };
+        }
+
+        if (
+            !customers[customerName]
+                .projects[projectName]
+        ) {
+            customers[customerName]
+                .projects[projectName] = {
+                    total: 0,
+                    contents: {}
+                };
+        }
+
+        if (
+            !customers[customerName]
+                .projects[projectName]
+                .contents[contentName]
+        ) {
+            customers[customerName]
+                .projects[projectName]
+                .contents[contentName] = {
+                    total: 0,
+                    records: []
+                };
+        }
+
+        const hours = Number(
+            record.hours || 0
+        );
+
+        customers[customerName].total += hours;
+
+        customers[customerName]
+            .projects[projectName].total += hours;
+
+        customers[customerName]
+            .projects[projectName]
+            .contents[contentName].total += hours;
+
+        customers[customerName]
+            .projects[projectName]
+            .contents[contentName]
+            .records.push(record);
+    });
+
+    let html = "";
+
+    Object.entries(customers).forEach(
+        ([customerName, customerData]) => {
+
+            html += `
+                <section class="kousu-customer-report">
+
+                    <div class="kousu-customer-header">
+                        <strong>
+                            ${customerName}
+                        </strong>
+
+                        <span>
+                            小計（客先）
+                            ${customerData.total.toFixed(2)} h
+                        </span>
+                    </div>
             `;
+
+            Object.entries(
+                customerData.projects
+            ).forEach(
+                ([projectName, projectData]) => {
+
+                    html += `
+                        <div class="kousu-project-report">
+
+                            <div class="kousu-project-header">
+                                <strong>
+                                    ${projectName}
+                                </strong>
+
+                                <span>
+                                    小計（件名）
+                                    ${projectData.total.toFixed(2)} h
+                                </span>
+                            </div>
+                    `;
+
+                    Object.entries(
+                        projectData.contents
+                    ).forEach(
+                        ([contentName, contentData]) => {
+
+                            html += `
+                                <div class="kousu-content-report">
+
+                                    <div class="kousu-content-title">
+                                        【${contentName}】
+                                    </div>
+
+                                    <div class="kousu-content-head">
+                                        <span>作業者</span>
+                                        <span>工数</span>
+                                    </div>
+                            `;
+
+                            contentData.records.forEach(
+                                record => {
+
+                                    const hours = Number(
+                                        record.hours || 0
+                                    );
+
+                                    const actions =
+                                        this.selectedWorker
+                                            ? `
+                                                <div class="kousu-report-actions">
+                                                    <button
+                                                        type="button"
+                                                        class="btn small"
+                                                        onclick="Kousu.edit(${record.originalIndex})">
+                                                        編集
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        class="btn danger small"
+                                                        onclick="Kousu.delete(${record.originalIndex})">
+                                                        削除
+                                                    </button>
+                                                </div>
+                                            `
+                                            : "";
+
+                                    html += `
+                                        <div class="kousu-worker-report-row">
+
+                                            <span class="kousu-report-worker">
+                                                ${record.employeeName || ""}
+                                            </span>
+
+                                            <div class="kousu-report-hours">
+                                                <strong>
+                                                    ${hours.toFixed(2)} h
+                                                </strong>
+
+                                                ${actions}
+                                            </div>
+
+                                        </div>
+                                    `;
+                                }
+                            );
+
+                            html += `
+                                    <div class="kousu-content-subtotal">
+                                        <span>小計（内容）</span>
+
+                                        <strong>
+                                            ${contentData.total.toFixed(2)} h
+                                        </strong>
+                                    </div>
+
+                                </div>
+                            `;
+                        }
+                    );
+
+                    html += `
+                        </div>
+                    `;
+                }
+            );
+
+            html += `
+                </section>
+            `;
+        }
+    );
+
+    this.table.innerHTML = html;
+},
+    refreshTable() {
+    if (!this.table) return;
+
+    /*
+     * Guardamos el índice original para que
+     * 編集 y 削除 sigan funcionando después de ordenar.
+     */
+    const records = DB.getTodayKousu()
+        .map((record, originalIndex) => {
+            return {
+                ...record,
+                originalIndex: originalIndex
+            };
+        })
+        .filter(record => {
+            if (!this.selectedWorker) {
+                return true;
+            }
+
+            return (
+                record.employeeId ===
+                this.selectedWorker.id
+            );
         });
 
-        if (this.total) {
-            this.total.textContent = total.toFixed(2);
-        }
+    let total = 0;
 
-        this.updateSummary(total);
+    records.forEach(record => {
+        total += Number(record.hours || 0);
+    });
 
-        if (typeof Dashboard !== "undefined") {
-            Dashboard.update();
-        }
-    },
+    /*
+     * Mostrar el nuevo informe jerárquico.
+     */
+    this.renderDailyReport(records);
+
+    if (this.total) {
+        this.total.textContent =
+            total.toFixed(2);
+    }
+
+    this.updateSummary(total);
+
+    if (typeof Dashboard !== "undefined") {
+        Dashboard.update();
+    }
+},
 
     updateSummary(inputTotal) {
         let workHours = 0;
@@ -440,21 +753,33 @@ this.afterSave();
         this.setText("kousuRemainHours", remain.toFixed(2) + " h");
 
         const remainEl = document.getElementById("kousuRemainHours");
+const remainLabel = document.getElementById("kousuRemainLabel");
+const remainBox = document.getElementById("kousuRemainBox");
 
-        if (remainEl) {
-            remainEl.className = "";
+if (remainEl && remainLabel && remainBox) {
+    remainEl.className = "";
+    remainBox.classList.remove(
+        "kousu-remain-pending",
+        "kousu-remain-complete"
+    );
 
-            if (remain < 0) {
-                remainEl.classList.add("remain-danger");
-            } else if (remain <= 1) {
-                remainEl.classList.add("remain-warning");
-            } else {
-                remainEl.classList.add("remain-ok");
-            }
-        }
-    },
+    const isComplete = Math.abs(remain) < 0.001 && workHours > 0;
 
-    getAvailableHours() {
+    if (isComplete) {
+        remainLabel.textContent = "入力完了";
+        remainEl.textContent = "完了";
+
+        remainBox.classList.add("kousu-remain-complete");
+    } else {
+        remainLabel.textContent = "残り";
+        remainEl.textContent = remain.toFixed(2) + " h";
+
+        remainBox.classList.add("kousu-remain-pending");
+    }
+}
+},
+
+getAvailableHours() {
         if (!this.selectedWorker) return 0;
 
         const workHours = this.getWorkerWorkHours(this.selectedWorker.id);
@@ -471,15 +796,184 @@ this.afterSave();
     },
 
     getWorkerWorkHours(workerId) {
-        const todayData = TimeCard.data[TimeCard.date] || {};
-        const record = todayData[workerId];
+    const todayData = TimeCard.data[TimeCard.date] || {};
+    const record = todayData[workerId];
 
-        if (!record || !record.clockIn) return 0;
+    if (!record || !record.clockIn) return 0;
 
-        const endTime = record.clockOut || this.nowTime();
+    if (
+        typeof TimeCard !== "undefined" &&
+        typeof TimeCard.calculateWorkDetail === "function"
+    ) {
+        const detail = TimeCard.calculateWorkDetail(record);
 
-        return this.calculateWorkHours(record.clockIn, endTime);
-    },
+        return Number(
+            (detail.accountedMinutes / 60).toFixed(2)
+        );
+    }
+
+    return 0;
+},
+calculateAccountingOutMinutes(record) {
+    if (
+        !record ||
+        !record.outRecords ||
+        record.outRecords.length === 0
+    ) {
+        return 0;
+    }
+
+    const officialBreaks = [
+        ["10:00", "10:10"],
+        ["12:00", "12:45"],
+        ["15:00", "15:10"],
+        ["17:20", "17:30"]
+    ];
+
+    let totalMinutes = 0;
+
+    record.outRecords.forEach(item => {
+        if (!item.out || !item.back) return;
+
+        const outStart = this.timeToMinutes(item.out);
+        const outEnd = this.timeToMinutes(item.back);
+
+        if (outEnd <= outStart) return;
+
+        let accountingMinutes = outEnd - outStart;
+
+        officialBreaks.forEach(breakTime => {
+            const breakStart = this.timeToMinutes(breakTime[0]);
+            const breakEnd = this.timeToMinutes(breakTime[1]);
+
+            const overlapStart = Math.max(outStart, breakStart);
+            const overlapEnd = Math.min(outEnd, breakEnd);
+
+            const overlapMinutes = Math.max(
+                overlapEnd - overlapStart,
+                0
+            );
+
+            accountingMinutes -= overlapMinutes;
+        });
+
+        totalMinutes += Math.max(accountingMinutes, 0);
+    });
+
+    return totalMinutes;
+},
+
+calculateCompanyHours(record) {
+    const unit = this.ACCOUNTING_UNIT_MINUTES;
+
+    const workStart = this.timeToMinutes(this.WORK_START);
+    const workEnd = this.timeToMinutes(this.WORK_END);
+    const overtimeStart = this.timeToMinutes(this.OVERTIME_START);
+
+    const actualStart = this.timeToMinutes(record.clockIn);
+    const actualEnd = this.timeToMinutes(
+        record.clockOut || this.nowTime()
+    );
+
+    if (actualEnd <= actualStart) {
+        return {
+            regular: 0,
+            early: 0,
+            overtime: 0,
+            total: 0
+        };
+    }
+
+    /*
+     * 定時間
+     * 08:30～17:20を8.00時間として扱う。
+     * 遅刻・早退は15分単位で控除する。
+     */
+
+    let regularHours = this.STANDARD_ACCOUNTING_HOURS;
+
+    if (actualStart > workStart) {
+        const lateMinutes = actualStart - workStart;
+        const lateBlocks = Math.ceil(lateMinutes / unit);
+
+        regularHours -= lateBlocks * (unit / 60);
+    }
+
+    if (actualEnd < workEnd) {
+        const earlyLeaveMinutes = workEnd - actualEnd;
+        const earlyLeaveBlocks = Math.ceil(earlyLeaveMinutes / unit);
+
+        regularHours -= earlyLeaveBlocks * (unit / 60);
+    }
+
+    if (actualEnd <= workStart || actualStart >= workEnd) {
+        regularHours = 0;
+    }
+
+    regularHours = Math.max(regularHours, 0);
+
+    /*
+     * 早出
+     * 早出申請済の場合だけ計算する。
+     * 完了した15分単位だけ加算する。
+     */
+
+    let earlyHours = 0;
+
+    if (record.earlyStart === true && actualStart < workStart) {
+        const earlyMinutes = workStart - actualStart;
+        const completeEarlyBlocks = Math.floor(earlyMinutes / unit);
+
+        earlyHours = completeEarlyBlocks * (unit / 60);
+    }
+
+    /*
+     * 残業
+     * 17:30以降の完了した15分単位だけ加算する。
+     */
+
+    let overtimeHours = 0;
+
+    if (actualEnd > overtimeStart) {
+        const overtimeMinutes = actualEnd - overtimeStart;
+        const completeOvertimeBlocks = Math.floor(
+            overtimeMinutes / unit
+        );
+
+        overtimeHours = completeOvertimeBlocks * (unit / 60);
+    }
+
+    /*
+ * 外出控除
+ * 休憩時間と重なる部分は除外し、
+ * 残りを15分単位で切り上げて控除する。
+ */
+
+const accountingOutMinutes =
+    this.calculateAccountingOutMinutes(record);
+
+const outBlocks = Math.ceil(
+    accountingOutMinutes / unit
+);
+
+const outHours = outBlocks * (unit / 60);
+
+const totalHours = Math.max(
+    regularHours +
+    earlyHours +
+    overtimeHours -
+    outHours,
+    0
+);
+
+    return {
+    regular: Number(regularHours.toFixed(2)),
+    early: Number(earlyHours.toFixed(2)),
+    overtime: Number(overtimeHours.toFixed(2)),
+    out: Number(outHours.toFixed(2)),
+    total: Number(totalHours.toFixed(2))
+};
+},
 
     calculateWorkHours(start, end) {
         const startMin = this.timeToMinutes(start);
